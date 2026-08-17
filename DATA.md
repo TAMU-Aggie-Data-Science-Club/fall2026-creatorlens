@@ -1,49 +1,34 @@
 # Data
 
-This file explains the project's **data sources** — where they come from, how to get them, and how to think about using them. It is the contextual companion to the [`data/`](data/) folder.
+This file explains **CreatorLens's** suggested data sources.
 
-> **`DATA.md` is tracked in git. The `data/` folder is not.** Documentation about the data lives here, in version control, so the whole team shares one understanding. The datasets themselves live in `data/`, which is **git-ignored** — raw data is often large, private, or licensed, and must never be committed. Clone the repo, then populate `data/` locally by following the sources below.
+> **`DATA.md` is tracked in git. The `data/` folder is not.** Clone the repo, then populate `data/` locally.
 
-## Where to look for sources
-
-At the start of the project, before committing to a source, scan these in roughly this order:
-
-1. **A source the club or a sponsor already provides.** If the project came with data, that's your primary source — document it first.
-2. **Official / authoritative open data.** Government portals (e.g. data.gov), inter-governmental bodies, and official statistics agencies. Highest trust, usually well-documented, clear licensing.
-3. **Curated dataset hubs.** Kaggle, Hugging Face Datasets, UCI ML Repository, Google Dataset Search, AWS/Azure open-data registries. Fast to start with; check the license and provenance.
-4. **Domain-specific repositories / APIs.** Whatever is standard for the project's field (e.g. a scientific archive, a public API, a research consortium). Often the richest and most relevant.
-5. **First-party collection.** Surveys, scraping (only where permitted), or instrumentation you build. Highest effort and the most responsibility — get PM sign-off first.
-
-## How to think about using a source (high level)
-
-Before you rely on a dataset, a member should be able to answer these — and record the answers in the source's row below:
-
-- **License & permission.** Are we allowed to use it for this purpose, and to share results? If unclear, ask a PM before building on it.
-- **Provenance.** Who produced it, when, and how? Freshness and collection method shape what conclusions are valid.
-- **Fitness.** Does it actually measure what the project needs? Coverage, granularity, and sample size matter more than size.
-- **Sensitivity.** Any PII, confidential, or ethically sensitive content? If yes, that dictates storage and handling — and it stays out of git regardless.
-- **Reproducibility.** Can a teammate re-fetch it from your notes alone? If not, the source isn't documented well enough yet.
-
-Choosing and vetting a source is a **judgment call** — surface it to a PM rather than deciding a major data direction alone.
-
-## Source register
-
-Document every source here as you adopt it. Replace these placeholders.
+## Suggested sources (starting point)
 
 | Source | Origin / URL | Access method | License | Sensitivity | Notes |
 |--------|--------------|---------------|---------|-------------|-------|
-| _e.g. Example Open Dataset_ | `https://…` | Manual download → `data/raw/` | CC-BY-4.0 | None | Updated annually |
-| | | | | | |
+| YouTube Data API v3 | https://developers.google.com/youtube/v3 | REST via `google-api-python-client`, Google Cloud key | Google API ToS | None (public channels) | 10,000-unit daily quota — plan queries carefully |
+| Kaggle Trending YouTube Video Dataset | https://www.kaggle.com/datasets/rsrishav/youtube-trending-video-dataset | Kaggle download | CC0 | None | Great for prototyping without burning API quota |
+| Social Blade (optional) | https://socialblade.com | HTML — **verify ToS before scraping** | Proprietary | None | Historical subscriber trajectories back in time. Check licensing terms first. |
+| Kaggle YouTube 8M subset | https://research.google.com/youtube8m/ | Research download | Custom (research use) | None | Only if going toward visual features later |
+
+## How to think about using each source
+
+- **Quota.** The YouTube API quota is small. Cache every response to `data/raw/` and design fetchers to be resumable — never re-hit the API for something you already have.
+- **Fitness.** The API returns *current* channel stats, not historical time series. To get trajectories you either scrape a third-party (with ToS in mind) or snapshot the API over the course of the project.
+- **License / ToS.** Public channel metadata is fine to work with. Republishing raw video content, thumbnails, or user comments has ToS and copyright implications — stick to metrics and metadata in v1.
+- **PII.** Public creator handles aren't PII, but if you branch into comment analysis later, treat commenters as sensitive.
+
+Choosing and vetting a source is a **judgment call** — surface it to a PM rather than deciding a major data direction alone.
 
 ## Local layout convention
 
-The `data/` folder is git-ignored, but keep a consistent structure inside it so everyone's local copy matches:
-
 ```
 data/
-├── raw/          # exactly as downloaded — never edit by hand
-├── interim/      # partially processed, intermediate outputs
-└── processed/    # analysis-ready, produced by the cleaning pipeline
+├── raw/          # API responses as fetched, one file per (channel, endpoint, date)
+├── interim/      # normalized channel + video tables
+└── processed/    # feature tables and cohort splits
 ```
 
 Because `data/` isn't in git, the **pipeline that fetches and builds these folders** is what must be committed and reproducible — not the data itself.

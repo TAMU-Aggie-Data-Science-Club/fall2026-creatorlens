@@ -1,26 +1,60 @@
-# IDE Data Science Club — Project Template
+# CreatorLens — Beginner
 
-A starter repository for **project managers (PMs)** in the IDE Data Science Club. Fork or "Use this template" to spin up a new project with the conventions, workflow, and scaffolding the club expects already in place.
+*ADSC Catalyst Project · Fall 2026*
 
-## What's in here
+## Overview
+
+CreatorLens analyzes YouTube channel growth by combining video metadata, audience engagement, and channel statistics to uncover the factors that drive long-term creator success. The final artifact is a dashboard that visualizes growth trajectories and compares creators side by side.
+
+## Objective
+
+Build a comparative-analytics tool for YouTube creators that surfaces which content, timing, and channel-level patterns correlate with sustained growth — and lets a viewer explore trajectories interactively.
+
+## Suggested tech stack
+
+- **Data processing:** Python, Pandas, NumPy
+- **Modeling / ML:** KMeans, KNN, PCA, simple time-series decomposition
+- **Visualization / dashboard:** Streamlit, Plotly
+- **Data sources:** YouTube Data API v3, Kaggle YouTube datasets
+
+See [`DATA.md`](DATA.md) for concrete data sources and how to access them.
+
+## What team members will gain
+
+- Real YouTube engagement analysis with hands-on API work
+- A defensible take on what actually makes big-creator videos pop
+- Insights an actual small creator could apply
+
+## Suggested scope (v1)
+
+Pick a **cohort of 100–500 channels in 2–3 niches** (e.g., science communication + tech reviews) rather than "all of YouTube." A small, comparable cohort produces much better analysis than a broad thin one.
+
+Build:
+
+1. Ingestion for channel + video metadata via YouTube Data API v3 (respect quota),
+2. Feature engineering (upload cadence, title/thumbnail length, view/like ratios, view velocity in first N days),
+3. Clustering (KMeans / KNN) + PCA visualization of channel archetypes,
+4. Trajectory time-series charts (subscribers, cumulative views) with change-point highlighting,
+5. Streamlit dashboard: channel picker, cohort comparison, growth explorer.
+
+**Out of scope for v1:** comment-sentiment NLP, thumbnail computer vision, real-time ingest, monetization/revenue estimation.
+
+See [`DELIVERABLES.md`](DELIVERABLES.md) for the suggested deliverable breakdown and rough timeline.
+
+## Repository map
 
 | File / folder | Purpose |
 |---|---|
-| [`CONTRIBUTING.md`](CONTRIBUTING.md) | **Start here.** How the team runs the project on GitHub — PM vs. member roles, the issue → PR → `main` flow, branching, worktrees, and reviews. |
-| [`DELIVERABLES.md`](DELIVERABLES.md) | The PMs' estimated deliverables and a rough timeline. A living plan, not a contract. |
-| [`DATA.md`](DATA.md) | Where the project's data comes from, how to find sources, and how to think about using them. Tracked in git. |
-| [`data/`](data/) | Working folder for actual datasets. **Git-ignored** — data never gets committed. |
-| [`AGENTS.md`](AGENTS.md) | The strict, machine-facing version of the workflow, for AI coding agents. |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | **Start here.** How the team runs the project on GitHub — PM vs. member roles, the issue → PR → `main` flow, branching, worktrees, reviews. |
+| [`DELIVERABLES.md`](DELIVERABLES.md) | Suggested deliverables and rough timeline. A living plan, not a contract. |
+| [`DATA.md`](DATA.md) | Suggested data sources, how to access them, and the source register. |
+| [`data/`](data/) | Local working folder for datasets. **Git-ignored** — data is never committed. |
+| [`AGENTS.md`](AGENTS.md) | Machine-facing workflow rules for AI coding agents. |
 
-## How to use this template
+## Notes for PMs
 
-1. **Create your repo from it.** On GitHub, click **Use this template → Create a new repository** (or fork it), then clone your copy.
-2. **Read [`CONTRIBUTING.md`](CONTRIBUTING.md).** Everyone on the team reads it; it's the operating manual.
-3. **Fill in [`DELIVERABLES.md`](DELIVERABLES.md)** with your project's real deliverables and dates.
-4. **Fill in [`DATA.md`](DATA.md)** with your actual data sources.
-5. **Turn on branch protection** for `main` (require a PR + one approval) and, ideally, **enable a code-review agent** (Codex or Claude auto-review) — see CONTRIBUTING.
-6. **Open your first issue** and run the flow.
+This README, [`DELIVERABLES.md`](DELIVERABLES.md), and [`DATA.md`](DATA.md) are **suggestions**, not commitments. Rewrite them as the team scopes the real project.
 
-## The one-paragraph version
+## Notes for members
 
-Every change starts as a GitHub **Issue**, gets built on a **branch** (organized as a small tree per issue, each slice optionally in its own **worktree**), is opened as a **pull request**, reviewed (by a teammate and, ideally, an auto-review agent), and merged **up the tree**. Only a **PM** merges the issue's integration branch into `main`. `main` is always in a known-good state. See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full workflow.
+Read [`CONTRIBUTING.md`](CONTRIBUTING.md) before touching code. Then pick up an issue from the board.
