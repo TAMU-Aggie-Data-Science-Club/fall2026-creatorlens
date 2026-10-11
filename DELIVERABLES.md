@@ -37,3 +37,5 @@ Retro                                              ██
 - **Dates are estimates.** When reality diverges, update the issue and this file if the shift is material.
 - **"Done" is defined per issue** via acceptance criteria — not by a date passing.
 - **Reprioritize openly.** If a deliverable changes, a PM notes why in the issue so the decision is auditable.
+
+Week1: Research Doc of Creator Growth: https://docs.google.com/document/d/1FuO0Msd6giRmwunEsjWfxzORsAupqKZtkzNbWgKc3eU/edit?usp=sharing
