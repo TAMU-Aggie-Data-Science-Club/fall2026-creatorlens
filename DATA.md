@@ -145,6 +145,74 @@ Some other limitations include:
 
 Because of this, collecting snapshots over time will be especially important if we want to study long-term creator growth rather than just comparing current statistics.
 
+### Data Loading and Validation
+
+After generating the CSV files, use `scripts/load_data.py` to load them into pandas DataFrames and validate their contents. Run the following commands from the repository root (the folder containing `scripts/` and `tests/`). Replace `YYYY-MM-DD` with the collection date in your actual filenames.
+
+```python
+from scripts.load_data import load_data
+
+channels = load_data("data/interim/channels_YYYY-MM-DD.csv", "channels")
+videos = load_data("data/interim/videos_YYYY-MM-DD.csv", "videos")
+
+print(channels.head())
+print(videos.head())
+print(channels.dtypes)
+```
+
+`load_data(file_path, dataset_type)` accepts a CSV path and either `"channels"` or `"videos"`. It returns a pandas DataFrame when the file passes validation. The loader checks that the file exists, the dataset type is supported, and required columns are present. It also checks numeric counts, required text fields, and date values; video durations are validated for video datasets. Invalid data raises an error rather than being silently accepted. Some YouTube statistics are optional and can be missing.
+
+#### Required CSV columns
+
+The loader requires **all columns listed below to exist** in the CSV, even if some cells are allowed to be empty. A missing column raises a `ValueError`.
+
+**Channel dataset** (`dataset_type="channels"`):
+
+| Required column | Expected value | Missing cell allowed? |
+|---|---|---|
+| `channel_id` | Nonempty string | No |
+| `channel_name` | Nonempty string | No |
+| `description` | Channel description (text) | Yes |
+| `published_at` | Valid ISO 8601 timestamp | No |
+| `subscriber_count` | Nonnegative integer | Yes |
+| `view_count` | Nonnegative integer | No |
+| `video_count` | Nonnegative integer | No |
+| `collection_date` | Date in `YYYY-MM-DD` format | No |
+
+**Video dataset** (`dataset_type="videos"`):
+
+| Required column | Expected value | Missing cell allowed? |
+|---|---|---|
+| `video_id` | Nonempty string | No |
+| `channel_id` | Nonempty string | No |
+| `title` | Nonempty string | No |
+| `published_at` | Valid ISO 8601 timestamp | No |
+| `duration` | ISO 8601 duration, such as `PT5M30S` | No |
+| `category_id` | Category identifier (text) | Yes |
+| `view_count` | Nonnegative integer | Yes |
+| `like_count` | Nonnegative integer | Yes |
+| `comment_count` | Nonnegative integer | Yes |
+| `collection_date` | Date in `YYYY-MM-DD` format | No |
+
+For numeric columns, whole-number values are expected; optional missing statistics are supported using pandas' nullable `Int64` dtype. The date format applies to the CSV's **stored text**, not the way spreadsheet software may display the date.
+
+#### Running the loader validation example
+
+The standalone validation script is located at `tests/test_load_data.py`. From the repository root, run:
+
+```powershell
+python -m tests.test_load_data
+```
+
+The script creates temporary sample CSV data, so it does **not** require a YouTube API key or previously downloaded datasets. It demonstrates four cases:
+
+1. A valid channel CSV loads successfully.
+2. A nonnumeric view count is rejected.
+3. A missing required column is rejected.
+4. An invalid collection date is rejected.
+
+Each successful check prints a `PASS` message. If a check fails, the script raises an error. Ensure the `tests/` folder contains `test_load_data.py` so the module command works consistently.
+
 ### Reproducing the Dataset
 
 The Python script and documentation will be committed to GitHub, but the actual datasets and API keys will remain stored locally.
