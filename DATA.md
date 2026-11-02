@@ -5,6 +5,9 @@ This file explains **CreatorLens's** suggested data sources.
 > **`DATA.md` is tracked in git. The `data/` folder is not.** Clone the repo, then populate `data/` locally.
 
 ## Suggested sources (starting point)
+Articles on Models:
+
+https://www.geeksforgeeks.org/machine-learning/arima-vs-sarima-model/ 
 
 | Source | Origin / URL | Access method | License | Sensitivity | Notes |
 |--------|--------------|---------------|---------|-------------|-------|
