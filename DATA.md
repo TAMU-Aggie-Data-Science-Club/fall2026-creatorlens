@@ -12,6 +12,7 @@ This file explains **CreatorLens's** suggested data sources.
 | Kaggle Trending YouTube Video Dataset | https://www.kaggle.com/datasets/rsrishav/youtube-trending-video-dataset | Kaggle download | CC0 | None | Great for prototyping without burning API quota |
 | Social Blade (optional) | https://socialblade.com | HTML — **verify ToS before scraping** | Proprietary | None | Historical subscriber trajectories back in time. Check licensing terms first. |
 | Kaggle YouTube 8M subset | https://research.google.com/youtube8m/ | Research download | Custom (research use) | None | Only if going toward visual features later |
+| Kaggle YouTube Dataset of all Data Science Channels | [https://research.google.com/youtube8m/](https://www.kaggle.com/datasets/abhishek0032/youtube-dataset-all-data-scienceanalyst-channels) | Research download | Custom (research use) | None | Only if going toward visual features later |
 
 ## How to think about using each source
 
