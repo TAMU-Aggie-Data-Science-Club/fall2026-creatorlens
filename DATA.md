@@ -18,6 +18,7 @@ https://www.geeksforgeeks.org/machine-learning/arima-vs-sarima-model/
 | Kaggle YouTube Dataset of all Data Science Channels | [https://research.google.com/youtube8m/](https://www.kaggle.com/datasets/abhishek0032/youtube-dataset-all-data-scienceanalyst-channels) | Research download | Custom (research use) | None | Only if going toward visual features later |
 | Social Media Engagement Dataset | https://www.kaggle.com/datasets/aviral342/social-media-engagement-dataset | Kaggle download | Comprehensive engagement metrics across major platforms | 
 | Instagram Data | https://www.kaggle.com/datasets/propriyam/instagram-data | Kaggle | Custom (research use) | None | Instagram post metrics including owner IDs, captions, likes, comments, and post upload Unix timestamps |
+| YouTube Video Analytics Dataset | https://www.kaggle.com/datasets/kundanbedmutha/youtube-video-analytics-dataset | Kaggle | Custom (research use) | None | Large scale dataset containing video level metrics and performance statistics for analyzing YouTube content engagement |
 
 ## How to think about using each source
 
