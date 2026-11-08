@@ -13,6 +13,7 @@ https://www.geeksforgeeks.org/machine-learning/arima-vs-sarima-model/
 |--------|--------------|---------------|---------|-------------|-------|
 | YouTube Data API v3 | https://developers.google.com/youtube/v3 | REST via `google-api-python-client`, Google Cloud key | Google API ToS | None (public channels) | 10,000-unit daily quota — plan queries carefully |
 | Kaggle Trending YouTube Video Dataset | https://www.kaggle.com/datasets/rsrishav/youtube-trending-video-dataset | Public download via `kagglehub` | CC0 | None (public video metadata) | All daily trending observations; `trending-dataset-20-24` is only the local folder name |
+| YouTube Tech Channels | https://www.kaggle.com/datasets/kenzabz8/youtube-tech-channels | Public download via `kagglehub` | TBD: verify on Kaggle | Public channel and video metadata | Initial 130-channel cohort and 1,300 video rows; the supplied source snapshots were scraped November 20, 2025. |
 | Social Blade (optional) | https://socialblade.com | HTML — **verify ToS before scraping** | Proprietary | None | Historical subscriber trajectories back in time. Check licensing terms first. |
 | Kaggle YouTube 8M subset | https://research.google.com/youtube8m/ | Research download | Custom (research use) | None | Only if going toward visual features later |
 | Kaggle YouTube Dataset of all Data Science Channels | [https://research.google.com/youtube8m/](https://www.kaggle.com/datasets/abhishek0032/youtube-dataset-all-data-scienceanalyst-channels) | Research download | Custom (research use) | None | Only if going toward visual features later |
@@ -41,6 +42,164 @@ Because `data/` isn't in git, the **pipeline that fetches and builds these folde
 
 
 ## Data Ingestion
+
+### Supabase table reference
+
+The shared Supabase PostgreSQL database has six tables. These are the columns
+and PostgreSQL types expected by the tech channel importer and daily collector.
+Teammates can browse the rows in Supabase's **Table Editor**.
+
+**`channels`** — one row per creator channel.
+
+| Column | Type | Description |
+|---|---|---|
+| `channel_id` | `text` | Primary key; YouTube channel ID |
+| `channel_name` | `text` | Channel name |
+| `description` | `text` | Channel description |
+| `created_at` | `timestamptz` | Channel creation time |
+| `country` | `text` | Channel country, when available |
+| `uploads_playlist` | `text` | ID of the channel's uploads playlist |
+
+**`cohorts`** — named groups of channels.
+
+| Column | Type | Description |
+|---|---|---|
+| `cohort_id` | `bigint` | Generated primary key |
+| `cohort_name` | `text` | Unique cohort name, such as `youtube_tech_channels` |
+
+**`cohort_channels`** — links channels to cohorts.
+
+| Column | Type | Description |
+|---|---|---|
+| `cohort_id` | `bigint` | References `cohorts.cohort_id`; part of composite primary key |
+| `channel_id` | `text` | References `channels.channel_id`; part of composite primary key |
+
+**`channel_snapshots`** — channel metrics observed on a collection date.
+
+| Column | Type | Description |
+|---|---|---|
+| `channel_id` | `text` | References `channels.channel_id`; part of composite primary key |
+| `collection_date` | `date` | UTC date; part of composite primary key |
+| `collected_at` | `timestamptz` | Time the measurement was collected |
+| `subscriber_count` | `bigint` | Subscriber count, when public |
+| `view_count` | `bigint` | Total channel views |
+| `video_count` | `bigint` | Public video count |
+| `source` | `text` | Kaggle import or YouTube API |
+| `scraped_at_raw` | `text` | Original Kaggle scrape timestamp, if applicable |
+
+**`videos`** — one row per tracked video.
+
+| Column | Type | Description |
+|---|---|---|
+| `video_id` | `text` | Primary key; YouTube video ID |
+| `channel_id` | `text` | References `channels.channel_id` |
+| `title` | `text` | Video title |
+| `published_at` | `timestamptz` | Video publication time |
+| `duration` | `text` | ISO 8601 video duration |
+| `thumbnail` | `text` | Thumbnail URL |
+| `video_url` | `text` | YouTube video URL |
+| `source_channel_name` | `text` | Channel name reported with the video |
+| `duration_readable` | `text` | Readable duration from the Kaggle source, if provided |
+
+**`video_snapshots`** — video metrics observed on a collection date.
+
+| Column | Type | Description |
+|---|---|---|
+| `video_id` | `text` | References `videos.video_id`; part of composite primary key |
+| `collection_date` | `date` | UTC date; part of composite primary key |
+| `collected_at` | `timestamptz` | Time the measurement was collected |
+| `view_count` | `bigint` | Video views |
+| `like_count` | `bigint` | Likes, when available |
+| `comment_count` | `bigint` | Comments, when available |
+| `source` | `text` | Kaggle import or YouTube API |
+| `scraped_at_raw` | `text` | Original Kaggle scrape timestamp, if applicable |
+
+The composite snapshot keys allow a rerun to refresh one day's observation
+without creating duplicate rows. Kaggle's original 2025 observations and later
+API observations share these tables but retain their own dates and sources.
+
+### Local credentials for Supabase imports and daily collection
+
+Create a `.env` file in the repository root before running the tech channel
+importer or the daily collector locally:
+
+```dotenv
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/postgres
+YOUTUBE_API_KEY=YOUR_YOUTUBE_DATA_API_KEY
+```
+
+Replace the placeholders with your Supabase PostgreSQL connection URI and
+YouTube Data API key. `import_tech_channels.py` needs `DATABASE_URL`; the daily
+`collect_tech_cohort_daily.py` needs both values. Both scripts load `.env`
+automatically, and environment variables already set in the shell take
+precedence. `.env` is git-ignored: never commit it or share credentials in a PR.
+
+### Import the YouTube Tech Channels cohort into Supabase
+
+This is a one-time import of the two CSVs in
+`kenzabz8/youtube-tech-channels`. The importer expects the six tables listed
+above. For a project with the older six-table schema, run
+`sql/002_tech_channels.sql` in Supabase's SQL Editor to add the CSV-specific
+columns. From the repository root:
+
+```bash
+python -m pip install kagglehub "psycopg[binary]" python-dotenv
+python scripts/import_tech_channels.py
+```
+
+The script downloads its source files into Kaggle's cache and writes the
+channels, cohort membership, video metadata (including duration), and original
+2025-11-20 channel/video measurements directly to Supabase. The original
+`scraped_at` text is retained alongside the database observation timestamp.
+Because the source's naive scrape timestamps have no timezone, the script
+assumes UTC for `collected_at`; verify that assumption with the dataset owner.
+All other source columns map to the channel, video, or snapshot tables.
+The import uses a single transaction and conflict handling on primary keys,
+so repeating it does not duplicate data. It creates no project CSV and is not
+part of `ingest_all_data.py`. A separate daily API collector will create
+current 2026 snapshots for the imported cohort.
+
+### Collect the tech cohort each day in November 2026
+
+The shared daily database is the project's **Supabase PostgreSQL database**.
+Each run writes its results directly to Supabase; teammates with access to the
+project can inspect the same data there. The dated measurements live in
+`channel_snapshots` and `video_snapshots`, while `channels`, `videos`,
+`cohorts`, and `cohort_channels` hold metadata and cohort membership. No
+separate local database or daily CSV is needed to view the collected snapshots.
+
+`scripts/collect_tech_cohort_daily.py` reads the `youtube_tech_channels`
+membership and tracked video IDs directly from Supabase. It batches YouTube API
+requests, discovers all uploads since November 1 using the channels' uploads
+playlists, and stores current channel and video statistics in the existing
+snapshot tables. Newly discovered videos are also added to `videos` with their
+title, publication date, and ISO 8601 duration. The original November 2025
+Kaggle snapshots stay on their original dates.
+
+Run the collector yourself each day from the repository root. Create the
+`.env` file above (or set both variables in your shell), then run:
+
+```bash
+python -m pip install "psycopg[binary]" google-api-python-client python-dotenv
+python scripts/collect_tech_cohort_daily.py
+```
+
+The first run records the current day only; YouTube does not provide
+retroactive daily view/subscriber counts. Rerunning later on the same UTC day
+refreshes that day's row rather than adding a duplicate. The job does not
+write local CSVs and makes no API calls outside November 1–30, 2026 (UTC).
+Unavailable, private, or deleted videos have no new snapshot, and the script
+prints how many IDs were unavailable. A channel whose uploads playlist returns
+404 is logged and skipped for upload discovery; its channel snapshot and any
+already tracked video snapshots are still collected. Other YouTube API errors
+stop the run so quota or authentication failures remain visible. Failure before the database transaction
+commits leaves no partial day's data.
+
+Run the command once per UTC day you want to capture; the script does not
+start itself or backfill a missed day's statistics. It stops collecting after
+November 2026. The team must carry out its planned database deletion on
+December 1 separately. Public API data storage and derived metrics remain
+subject to YouTube's developer policies.
 
 ### Run all dataset importers
 
